@@ -5,11 +5,6 @@
 // comment). This pipeline checks out each dependency's own git repo into a
 // sibling directory of the Jenkins workspace and builds them in order,
 // mirroring the exact directory layout GPN/Dockerfile already uses.
-//
-// REQUIRES: AlfaDOCK must have its own git remote before ALFADOCK_GIT_URL
-// below can be filled in — it does not have one as of this pipeline being
-// written. Fix that first, then set a real default (or override at build
-// time via "Build with Parameters").
 // ─────────────────────────────────────────────────────────────────────────
 pipeline {
     agent any
@@ -52,8 +47,8 @@ pipeline {
         )
         string(
             name: 'ALFADOCK_GIT_URL',
-            defaultValue: '',
-            description: 'AlfaDOCK repo URL — REQUIRED, no default yet (see file header comment)'
+            defaultValue: 'https://github.com/Rajeshluffy/alfaDock.git',
+            description: 'AlfaDOCK repo URL'
         )
         string(
             name: 'ALFADOCK_GIT_BRANCH',
