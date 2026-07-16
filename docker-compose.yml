@@ -1,0 +1,33 @@
+# Run from the workspace/ PARENT directory (same reason as Dockerfile's build
+# context — see its header comment):
+#   cd "D:\E Drive\Engineering\testleaf\workspace"
+#   docker compose -f GPN/docker-compose.yml up --build
+version: '3.9'
+
+services:
+
+  gpn-tests:
+    build:
+      context: .
+      dockerfile: GPN/Dockerfile
+    container_name: gpn-tests
+    env_file:
+      # Real ALFADOCK_*_USER/PASS values for STANDARD-mode suites
+      # (gpn-standard.xml). Never committed — see GPN/.gitignore.
+      # Copy GPN/.env.gpn.example to GPN/.env.gpn and fill in real values.
+      - ./GPN/.env.gpn
+    environment:
+      BROWSER: ${BROWSER:-chrome}
+      ENVIRONMENT: ${ENVIRONMENT:-dev}
+      HEADLESS: ${HEADLESS:-true}
+      SUITE_FILE: ${SUITE_FILE:-gpn.xml}
+    volumes:
+      - ./GPN/reports:/app/GPN/reports
+      - ./GPN/logs:/app/GPN/logs
+      - ./GPN/target/surefire-reports:/app/GPN/target/surefire-reports
+      # DATAPROVIDER-mode suites (gpn.xml's default) read real customer
+      # account rows from these Excel fixtures — mount them read-only rather
+      # than baking them into the image (see Dockerfile's comment on why
+      # they're excluded from the build context entirely).
+      - "./GPN/src/test/resources/GPN Account.xlsx:/app/GPN/src/test/resources/GPN Account.xlsx:ro"
+      - "./GPN/src/test/resources/GPN Account - ERP.xlsx:/app/GPN/src/test/resources/GPN Account - ERP.xlsx:ro"

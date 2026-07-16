@@ -1,0 +1,88 @@
+# One-shot Job — runs the GPN suite to completion and exits (no Selenium
+# Grid, no scheduling; see the plan's "K8s target" decision).
+#
+# Prerequisites before `kubectl apply -f k8s/`:
+#   1. Build & push the image built from ../Dockerfile to a registry the
+#      cluster can pull from, then set `image:` below to that reference
+#      (this manifest ships with a local-only placeholder tag).
+#   2. Create the two Secrets described in gpn-secret.example.yaml's header
+#      comment (gpn-credentials, gpn-account-data) in the `gpn` namespace.
+#   3. Apply namespace.yaml first (or drop `-n gpn` / the namespace field
+#      below if you'd rather use an existing namespace).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gpn-tests
+  namespace: gpn
+  labels:
+    app: gpn-tests
+spec:
+  # Single attempt, no retries — a flaky UI test retrying itself via k8s
+  # Job semantics would just mask real failures; retries belong at the
+  # TestNG/RetryEngine layer (already built into autoFrameX), not here.
+  backoffLimit: 0
+  # Auto-delete the Job (and its Pod) 1 hour after it finishes, so results
+  # don't pile up — extract reports via `kubectl cp` before this fires.
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: gpn-tests
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: gpn-tests
+          image: gpn-tests:latest   # REPLACE: your-registry/gpn-tests:<tag>
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: gpn-credentials
+          env:
+            - name: BROWSER
+              value: "chrome"
+            - name: ENVIRONMENT
+              value: "dev"
+            - name: HEADLESS
+              value: "true"
+            - name: SUITE_FILE
+              value: "gpn.xml"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          volumeMounts:
+            - name: reports
+              mountPath: /app/GPN/reports
+            - name: logs
+              mountPath: /app/GPN/logs
+            - name: gpn-account-xlsx
+              mountPath: "/app/GPN/src/test/resources/GPN Account.xlsx"
+              subPath: "GPN Account.xlsx"
+              readOnly: true
+            - name: gpn-account-erp-xlsx
+              mountPath: "/app/GPN/src/test/resources/GPN Account - ERP.xlsx"
+              subPath: "GPN Account - ERP.xlsx"
+              readOnly: true
+      volumes:
+        # emptyDir dies with the Pod — fine for a one-shot Job as long as you
+        # `kubectl cp` reports/logs out before ttlSecondsAfterFinished fires.
+        # Swap for a PVC (existingClaim) if you need results to outlive the Job.
+        - name: reports
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
+        - name: gpn-account-xlsx
+          secret:
+            secretName: gpn-account-data
+            items:
+              - key: "GPN Account.xlsx"
+                path: "GPN Account.xlsx"
+        - name: gpn-account-erp-xlsx
+          secret:
+            secretName: gpn-account-data
+            items:
+              - key: "GPN Account - ERP.xlsx"
+                path: "GPN Account - ERP.xlsx"
