@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+    GPN Smoke Suite — STANDARD mode
+    ─────────────────────────────────────────────────────────────────────
+    executionMode="STANDARD"
+      @Factory reads the single account supplied below and creates exactly
+      one instance of each test class.  The Excel file is not read.
+
+      Example: 1 account × 2 test classes = 2 instances executed.
+
+    Account credentials are intentionally NOT declared as suite parameters
+    here — AlfaDockBaseTest.accountRows() (STANDARD mode) resolves them via
+    ConfigResolver's priority chain: this suite's own <parameter> (none set,
+    by design) -> CI/CD environment variable -> JVM system property ->
+    alfaDOCKConfig.properties' own default account. Set these before running
+    locally or in CI:
+      ALFADOCK_COMPANY_USER, ALFADOCK_COMPANY_PASS,
+      ALFADOCK_USER_USER,    ALFADOCK_USER_PASS
+    (Jenkins Credentials store / docker --env-file / Kubernetes Secret ->
+    env vars — see Jenkinsfile/Dockerfile/k8s manifests for how each wires
+    these in.) All other suite settings (browser, environment, etc.) are
+    identical to the DATAPROVIDER suite so behaviour is consistent across
+    modes.
+    ─────────────────────────────────────────────────────────────────────
+-->
+<suite name="GPN Suite" parallel="instances" thread-count="1" verbose="1">
+
+    <parameter name="executionMode" value="STANDARD" />
+
+    <parameter name="configClass"  value="com.alfaDOCK.config.data.AlfaDockConfiguration" />
+    <parameter name="environment"  value="dev" />
+    <parameter name="browser"      value="chrome" />
+    <parameter name="maxPoolSize"  value="1" />
+
+    <test name="GPN Tests">
+        <classes>
+          <class name="com.gpn.testcases.TC000_GPN_BEEP_SettingsChange" />
+            <!-- <class name="com.gpn.testcases.TC004_VerifyMODisplay" /> -->
+        </classes>
+    </test>
+
+</suite>

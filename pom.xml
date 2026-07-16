@@ -1,0 +1,54 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.gpn</groupId>
+	<artifactId>GPN</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<properties>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!-- Default suite so a bare "mvn test" works without -DsuiteXmlFile=...;
+		     override at the command line for any other suite (gpn-standard.xml,
+		     gpn-standard-1.xml, "Validate GPN Launch.xml", "Validate Settings.xml"). -->
+		<suiteXmlFile>gpn.xml</suiteXmlFile>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.2.5</version>
+				<configuration>
+					<!-- Default suite; override at the command line with:
+					     mvn test -DsuiteXmlFile=gpn-standard.xml -->
+					<suiteXmlFiles>
+						<suiteXmlFile>${suiteXmlFile}</suiteXmlFile>
+					</suiteXmlFiles>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<!-- autoFrameX is now an 8-module Maven reactor (TD-20) — the old single
+		     "autoFrameX:autoFrameX" artifact no longer exists. autoframex-selenium
+		     pulls in autoframex-core transitively, which covers every framework
+		     class this project imports directly (ProjectSpecificMethods,
+		     Locators, ScreenshotUtils/ScreenshotStore, ...). AlfaDOCK below also
+		     now depends on autoframex-selenium the same way. -->
+		<dependency>
+			<groupId>autoFrameX</groupId>
+			<artifactId>autoframex-selenium</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.alfadock</groupId>
+			<artifactId>AlfaDOCK</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+</project>

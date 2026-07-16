@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+    GPN Visual Comparison Suite
+    ────────────────────────────────────────────────────────────────────
+    Block 1 (QA Tests)  — runs TC004 for all accounts in QA environment;
+                          screenshots saved to Screenshots/QA/TC004_VerifyMODisplay/
+    Block 2 (DEV Tests) — same test in DEV environment;
+                          screenshots saved to Screenshots/DEV/TC004_VerifyMODisplay/
+    Block 3 (Visual Comparison) — compares QA vs DEV screenshots file by file;
+                          diff images saved to Screenshots/Diff/TC004_VerifyMODisplay/
+                          no browser opened in this block
+
+    DATAPROVIDER mode: @Factory creates one instance per Excel row.
+    Screenshot filename: <companyUser>_canvas.jpg  (same in QA and DEV for pairing)
+
+    Threshold: set compareThreshold parameter (default 0.0 = exact match).
+               Or pass -Dcompare.threshold=1.0 at runtime.
+    ────────────────────────────────────────────────────────────────────
+-->
+<suite name="GPN Visual Comparison Suite" parallel="instances" thread-count="4" verbose="1">
+
+    <!-- Shared settings (test blocks inherit and may override) -->
+    <parameter name="executionMode" value="DATAPROVIDER"/>
+    <parameter name="excelPath"     value="src/test/resources/GPN Account - ERP.xlsx"/>
+    <parameter name="configClass"   value="com.alfaDOCK.config.data.AlfaDockConfiguration"/>
+    <parameter name="browser"       value="chrome"/>
+    <parameter name="maxPoolSize"   value="4"/>
+
+    <!-- Block 1 — QA: runs first; saves screenshots to Screenshots/QA/ -->
+    <test name="QA Tests">
+        <parameter name="environment" value="qa"/>
+        <classes>
+            <class name="com.gpn.testcases.TC004_VerifyMODisplay"/>
+        </classes>
+    </test>
+
+    <!-- Block 2 — DEV: runs after QA; saves screenshots to Screenshots/DEV/ -->
+    <test name="DEV Tests">
+        <parameter name="environment" value="dev"/>
+        <classes>
+            <class name="com.gpn.testcases.TC004_VerifyMODisplay"/>
+        </classes>
+    </test>
+
+    <!-- Block 3 — Compare: no browser, no login; scans Screenshots/QA vs DEV -->
+    <test name="Visual Comparison">
+        <parameter name="compareThreshold" value="5.0"/>
+        <classes>
+            <class name="com.gpn.testcases.TCCompare_VisualDiff"/>
+        </classes>
+    </test>
+
+</suite>
