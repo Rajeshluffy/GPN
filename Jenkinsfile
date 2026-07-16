@@ -52,7 +52,7 @@ pipeline {
         )
         string(
             name: 'ALFADOCK_GIT_BRANCH',
-            defaultValue: 'main',
+            defaultValue: 'master',
             description: 'AlfaDOCK branch to build against'
         )
     }
