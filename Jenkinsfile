@@ -103,6 +103,36 @@ pipeline {
             }
         }
 
+        stage('Inject AlfaDOCK config') {
+            steps {
+                // alfaDOCKConfig.properties holds the real app URLs (devUrl/qaUrl)
+                // and company/user credentials — gitignored in alfaDock's own repo
+                // (see its .gitignore), so a fresh clone never has it. MUST land
+                // here, before "Build & Install dependencies" builds+installs
+                // alfaDock's jar — Maven bundles src/main/resources at build time,
+                // so injecting this file any later would package a jar without it,
+                // which is exactly what produced "No URL could be resolved" on the
+                // previous run.
+                withCredentials([
+                    file(credentialsId: 'alfadock-config', variable: 'ALFA_CONFIG')
+                ]) {
+                    script {
+                        if (isUnix()) {
+                            sh '''
+                                mkdir -p alfaDock/src/main/resources
+                                cp "$ALFA_CONFIG" "alfaDock/src/main/resources/alfaDOCKConfig.properties"
+                            '''
+                        } else {
+                            bat '''
+                                if not exist alfaDock\\src\\main\\resources mkdir alfaDock\\src\\main\\resources
+                                copy /Y "%ALFA_CONFIG%" "alfaDock\\src\\main\\resources\\alfaDOCKConfig.properties"
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Build & Install dependencies') {
             steps {
                 // Install order matters: autoFrameX reactor -> AlfaDOCK -> GPN.
